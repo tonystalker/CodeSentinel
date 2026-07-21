@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentinel-review"
+version = "0.1.0"
+description = "AI-powered code review: LangGraph + Llama 3.3 70B, Tree-sitter AST RAG, E2B sandbox self-debugging"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["code-review", "ai", "llm", "static-analysis", "langgraph"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    # LLM / orchestration
+    "langchain-groq>=0.2.0",
+    "langchain-core>=0.3.0",
+    "langgraph>=0.2.0",
+    "langsmith>=0.1.0",
+    # Config / secrets
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.2.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
+    # AST parsing
+    "tree-sitter>=0.22.0",
+    "tree-sitter-python>=0.22.0",
+    "tree-sitter-javascript>=0.22.0",
+    "tree-sitter-typescript>=0.22.0",
+    "tree-sitter-java>=0.22.0",
+    "tree-sitter-go>=0.22.0",
+    # Embeddings
+    "sentence-transformers>=3.0.0",
+    # Vector stores
+    "faiss-cpu>=1.8.0",
+    "pinecone-client>=3.0.0",
+    # Git / loaders
+    "gitpython>=3.1.40",
+    # E2B sandbox
+    "e2b-code-interpreter>=0.0.8",
+    # CLI
+    "typer[all]>=0.12.0",
+    "rich>=13.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-mock>=3.12.0",
+    "ruff>=0.3.0",
+    "mypy>=1.8.0",
+]
+
+[project.scripts]
+sentinel = "sentinel_review.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sentinel_review*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true

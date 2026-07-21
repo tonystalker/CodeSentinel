@@ -1,0 +1,6 @@
+findings:
+  - rule_id: hardcoded-secret
+    file: api_client.py
+    start_line: 7
+    end_line: 8
+    auto_fixable: true

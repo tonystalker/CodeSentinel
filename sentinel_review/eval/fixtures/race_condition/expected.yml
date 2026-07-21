@@ -1,0 +1,6 @@
+findings:
+  - rule_id: race-condition
+    file: counter.py
+    start_line: 14
+    end_line: 18
+    auto_fixable: false

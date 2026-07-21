@@ -1,0 +1,6 @@
+findings:
+  - rule_id: null-deref
+    file: service.py
+    start_line: 6
+    end_line: 8
+    auto_fixable: true

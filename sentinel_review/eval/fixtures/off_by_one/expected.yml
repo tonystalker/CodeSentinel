@@ -1,0 +1,6 @@
+findings:
+  - rule_id: off-by-one
+    file: processor.py
+    start_line: 13
+    end_line: 16
+    auto_fixable: true

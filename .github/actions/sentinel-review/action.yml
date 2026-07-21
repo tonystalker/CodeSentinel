@@ -1,0 +1,61 @@
+name: sentinel-review
+description: AI-powered code review with LangGraph + Llama 3.3 70B
+author: sentinel-review
+
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  groq-api-key:
+    description: "Groq API key (BYOK — uses the adopting repo's own secret)"
+    required: true
+  pinecone-api-key:
+    description: "Pinecone API key (optional — falls back to local FAISS)"
+    required: false
+    default: ""
+  e2b-api-key:
+    description: "E2B API key for sandbox fix validation (optional)"
+    required: false
+    default: ""
+  langchain-api-key:
+    description: "LangSmith API key for tracing (optional)"
+    required: false
+    default: ""
+  diff-ref:
+    description: "Git ref to diff against (e.g. 'main'). Empty = full scan."
+    required: false
+    default: ""
+  auto-fix:
+    description: "Enable confidence-gated auto-apply of generated fixes"
+    required: false
+    default: "false"
+  sarif-output:
+    description: "Path for SARIF output file (uploaded to GitHub Security tab)"
+    required: false
+    default: "sentinel-review.sarif"
+  agents:
+    description: "Comma-separated agents to run (bug,security,docs)"
+    required: false
+    default: "bug,security"
+  fail-on-severity:
+    description: "Exit with code 1 if findings at this severity or above. Set to 'none' to never fail."
+    required: false
+    default: "high"
+
+outputs:
+  findings-count:
+    description: "Total number of findings"
+  review-score:
+    description: "Weighted severity score (0.0–1.0)"
+  sarif-file:
+    description: "Path to generated SARIF file"
+
+runs:
+  using: docker
+  image: Dockerfile
+  env:
+    GROQ_API_KEY: ${{ inputs.groq-api-key }}
+    PINECONE_API_KEY: ${{ inputs.pinecone-api-key }}
+    E2B_API_KEY: ${{ inputs.e2b-api-key }}
+    LANGCHAIN_API_KEY: ${{ inputs.langchain-api-key }}

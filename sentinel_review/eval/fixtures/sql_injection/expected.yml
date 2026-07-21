@@ -1,0 +1,6 @@
+findings:
+  - rule_id: sql-injection
+    file: db.py
+    start_line: 12
+    end_line: 14
+    auto_fixable: true

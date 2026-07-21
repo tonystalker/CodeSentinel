@@ -1,0 +1,39 @@
+# .sentinel.yml — sentinel-review configuration
+#
+# This file controls BEHAVIOR only. Never put API keys here.
+# Keys go in environment variables (or a .env file) — see .env.example.
+#
+# All fields are optional — missing file = sane defaults.
+
+# Vector store backend: "local" (FAISS, no account needed) or "pinecone"
+vector_store: local
+
+# Enable confidence-gated automatic application of generated fixes
+auto_fix: false
+
+# Minimum model confidence (0.0–1.0) to auto-apply a fix
+auto_fix_confidence_threshold: 0.85
+
+# Severities eligible for auto-apply. "critical" omitted intentionally —
+# those always go to a human, even if the model is confident.
+auto_fix_allowed_severities:
+  - high
+  - medium
+  - low
+
+# Max E2B sandbox attempts per finding
+max_fix_attempts: 3
+
+# E2B sandbox hard timeout per attempt (seconds). E2B bills per second.
+sandbox_timeout_seconds: 90
+
+# Paths to exclude from analysis (glob patterns)
+ignore_paths:
+  - ".venv/*"
+  - "*.egg-info/*"
+
+# Agents to run: any subset of ["bug", "security", "docs"]
+enabled_agents:
+  - bug
+  - security
+  - docs

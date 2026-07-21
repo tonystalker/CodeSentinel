@@ -1,0 +1,12 @@
+- id: sentinel-review
+  name: sentinel-review
+  language: python
+  language_version: python3
+  entry: sentinel review
+  args: ["--staged"]
+  pass_filenames: false
+  stages: [commit]
+  description: >
+    AI-powered code review (bug + security agents only, no sandbox loop).
+    Runs on staged files before commit. Blocks commits that introduce
+    critical or high-severity findings.

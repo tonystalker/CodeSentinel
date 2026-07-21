@@ -1,0 +1,36 @@
+name: sentinel-review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  security-events: write  # needed for upload-sarif
+  pull-requests: write    # needed for PR review comments
+
+jobs:
+  sentinel-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for diff-aware analysis
+
+      - name: Run sentinel-review
+        uses: ./.github/actions/sentinel-review
+        with:
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          pinecone-api-key: ${{ secrets.PINECONE_API_KEY }}
+          e2b-api-key: ${{ secrets.E2B_API_KEY }}
+          diff-ref: ${{ github.base_ref }}
+          auto-fix: "false"
+          agents: "bug,security"
+          sarif-output: sentinel-review.sarif
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: sentinel-review.sarif
