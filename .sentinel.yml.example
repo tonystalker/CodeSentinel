@@ -37,3 +37,9 @@ enabled_agents:
   - bug
   - security
   - docs
+
+# Groq model to use for all agents.
+# Override at runtime with: SENTINEL_LLM_MODEL=llama-3.1-8b-instant sentinel review ...
+# Useful when the default model hits its daily token quota (100k TPD on free tier).
+# llama-3.1-8b-instant has a separate 500k TPD quota.
+llm_model: llama-3.3-70b-versatile

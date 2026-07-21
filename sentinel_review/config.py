@@ -94,6 +94,16 @@ class SentinelConfig(BaseModel):
         description="Delete namespaces for repos not analyzed within this many days.",
     )
 
+    # --- LLM ---
+    llm_model: str = Field(
+        default="llama-3.3-70b-versatile",
+        description=(
+            "Groq model identifier. Override via SENTINEL_LLM_MODEL env var or "
+            "llm_model: in .sentinel.yml. Useful when hitting daily token limits on "
+            "the default model (e.g. switch to 'llama-3.1-8b-instant' for eval runs)."
+        ),
+    )
+
     # --- Embedder ---
     embedding_model: str = Field(
         default="jinaai/jina-embeddings-v2-base-code",

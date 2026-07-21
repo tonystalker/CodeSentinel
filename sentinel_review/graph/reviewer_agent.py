@@ -28,18 +28,32 @@ _SEVERITY_WEIGHT = {"critical": 4, "high": 3, "medium": 2, "low": 1}
 
 
 def _deduplicate(findings: list[Finding]) -> list[Finding]:
-    """Remove duplicate findings with the same (file_path, start_line, rule_id)."""
-    seen: dict[tuple, Finding] = {}
+    """Remove duplicate findings that share (file_path, rule_id) and have overlapping
+    line ranges. Keying on exact start_line missed cases where two agents reported the
+    same bug with slightly different bounds; keying on rule_id alone would merge
+    genuinely distinct bugs in the same file.
+
+    For each incoming finding:
+    - If an existing result entry shares file_path + rule_id AND the line ranges
+      overlap, merge (keep higher severity).
+    - Otherwise append as a new distinct finding.
+    """
+    result: list[Finding] = []
     for f in findings:
-        key = (f.file_path, f.start_line, f.rule_id)
-        if key not in seen:
-            seen[key] = f
-        else:
-            # Keep the one with higher severity
-            existing = seen[key]
-            if _SEVERITY_WEIGHT.get(f.severity, 0) > _SEVERITY_WEIGHT.get(existing.severity, 0):
-                seen[key] = f
-    return list(seen.values())
+        merged = False
+        for i, existing in enumerate(result):
+            same_file = f.file_path == existing.file_path
+            same_rule = f.rule_id == existing.rule_id
+            overlaps = f.start_line <= existing.end_line and f.end_line >= existing.start_line
+            if same_file and same_rule and overlaps:
+                # Keep the higher-severity variant
+                if _SEVERITY_WEIGHT.get(f.severity, 0) > _SEVERITY_WEIGHT.get(existing.severity, 0):
+                    result[i] = f
+                merged = True
+                break
+        if not merged:
+            result.append(f)
+    return result
 
 
 def _compute_review_score(findings: list[Finding]) -> float:

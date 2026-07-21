@@ -167,11 +167,15 @@ def build_graph(
     Returns:
         A compiled LangGraph CompiledGraph ready for .invoke() / .stream().
     """
+    import os
+    model = os.environ.get("SENTINEL_LLM_MODEL") or config.llm_model
     llm = ChatGroq(
-        model="llama-3.3-70b-versatile",
+        model=model,
         api_key=groq_api_key,
         temperature=0,
     )
+    logger.info("LLM: %s", model)
+
 
     agents = enabled_agents or config.enabled_agents
     max_attempts = config.max_fix_attempts

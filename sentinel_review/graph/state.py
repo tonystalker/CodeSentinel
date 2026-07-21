@@ -53,4 +53,4 @@ class AgentState(TypedDict, total=False):
     # --- Final scores (set by reviewer_agent) ---
     review_score: float | None        # Weighted severity score 0.0–1.0
     fix_success_rate: float | None    # Fraction of fixes that passed sandbox
-    agent_timeline: list[str]         # Human-readable log of agent transitions (for CLI display)
+    agent_timeline: Annotated[list[str], operator.add] # Human-readable log of agent transitions

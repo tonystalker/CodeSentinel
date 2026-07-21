@@ -9,9 +9,60 @@ SARIF output uses it directly as ruleId and as the rule registry key (skill.md �
 """
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Union
 
 from pydantic import BaseModel, Field, field_validator
+
+# ---------------------------------------------------------------------------
+# Rule ID controlled vocabulary
+# ---------------------------------------------------------------------------
+# NOTE: "hardcoded-credential" is intentionally absent — a hardcoded password
+# is a hardcoded secret. Keeping both as valid values lets agents emit
+# different slugs for the same location (confirmed in live debug data).
+# Collapsed into hardcoded-secret: one category, no ambiguity.
+#
+# Real repos will produce findings outside the six eval fixtures; the
+# taxonomy covers ~30 categories (OWASP Top 10 + common logic-bug patterns)
+# with an explicit "other" fallback so nothing is silently rejected.
+RuleId = Literal[
+    # Secrets & Auth
+    "hardcoded-secret",
+    "insecure-default-password",
+    # Injection
+    "sql-injection",
+    "command-injection",
+    "path-traversal",
+    "xss",
+    "ssrf",
+    "open-redirect",
+    # Crypto
+    "weak-crypto",
+    "insecure-random",
+    "broken-tls",
+    # Information Exposure
+    "sensitive-data-logging",
+    "info-disclosure",
+    # Logic Bugs
+    "null-deref",
+    "off-by-one",
+    "missing-import",
+    "race-condition",
+    "unchecked-return",
+    "type-confusion",
+    "resource-leak",
+    # Access Control
+    "broken-access-control",
+    "missing-auth",
+    "privilege-escalation",
+    # Supply Chain
+    "dependency-confusion",
+    "insecure-deserialization",
+    # Docs
+    "missing-docstring",
+    "stale-docstring",
+    # Catch-all — never rejected, loses category-level signal
+    "other",
+]
 
 
 class Finding(BaseModel):
@@ -29,20 +80,43 @@ class Finding(BaseModel):
     description: str = Field(
         description="Human-readable description of the issue. Be specific and actionable."
     )
-    rule_id: str = Field(
+    rule_id: RuleId = Field(
         description=(
-            "Stable slug identifier for this rule (e.g. 'null-deref', 'sql-injection', "
-            "'missing-import'). Used as SARIF ruleId. Must be lowercase, hyphen-separated."
+            "Stable slug identifier for this rule. Must be one of the values in the "
+            "RuleId taxonomy defined in this module. Use 'other' for findings that do "
+            "not fit any named category — do NOT invent new slugs. Used as SARIF ruleId."
         )
     )
 
-    @field_validator("rule_id")
+    @field_validator("rule_id", mode="before")
     @classmethod
-    def rule_id_is_slug(cls, v: str) -> str:
+    def rule_id_normalise(cls, v: str) -> str:
+        """Normalise slug format then map known synonyms to canonical values.
+
+        This runs *before* Literal validation so:
+        - CamelCase / underscores are converted to hyphen-lowercase.
+        - Known synonyms (e.g. 'hardcoded-credential') are collapsed to
+          their canonical form so the Literal check always passes.
+        - Anything that is still unrecognised falls through to 'other'.
+        """
         import re
-        if not re.match(r"^[a-z][a-z0-9-]*$", v):
-            # Normalise rather than reject — LLMs sometimes produce CamelCase or underscores
-            v = re.sub(r"[^a-z0-9-]", "-", v.lower()).strip("-")
+        from typing import get_args
+        # 1. Normalise format
+        v = re.sub(r"[^a-z0-9-]", "-", v.lower()).strip("-")
+        # 2. Collapse known synonyms to canonical rule IDs
+        _SYNONYMS: dict[str, str] = {
+            "hardcoded-credential": "hardcoded-secret",
+            "hardcoded-credentials": "hardcoded-secret",
+            "hardcoded-password": "hardcoded-secret",
+            "hardcoded-api-key": "hardcoded-secret",
+            "sensitive-data-exposure": "info-disclosure",
+            "information-disclosure": "info-disclosure",
+        }
+        v = _SYNONYMS.get(v, v)
+        # 3. Fall back to 'other' for unrecognised slugs rather than failing
+        valid = get_args(RuleId.__value__ if hasattr(RuleId, '__value__') else RuleId)  # type: ignore[arg-type]
+        if v not in valid:
+            v = "other"
         return v
 
     @field_validator("start_line", "end_line")
