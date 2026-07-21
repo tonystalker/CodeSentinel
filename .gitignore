@@ -37,3 +37,8 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+Log.md
+implementation_plan.md
+build.md
+skill.md
